@@ -1,56 +1,58 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   server.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yufli <yufli@student.42barcelona.com>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/15 18:48:38 by yufli             #+#    #+#             */
+/*   Updated: 2025/03/16 19:13:09 by yufli            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/minitalk.h"
 
-void	handle_char(void)
-{
-	char	*new_buff;
-	size_t	new_size;
+static t_server	g_data = {0};
 
-	if (g_state.current_char == '\0')
+void	sig_handler(int sig, siginfo_t *info, void *context)
+{
+	(void)context;
+	g_data.current_char = (g_data.current_char << 1) | (sig == SIGUSR2);
+	g_data.bit_count++;
+	if (g_data.bit_count == 8)
 	{
-		write(1, g_state.buffer, g_state.index);
-		write(1, "\n", 1 * (g_state.index > 0));
-		g_state.index = 0;
+		if (g_data.current_char == '\0')
+		{
+			write(1, "\n", 1);
+			kill(info->si_pid, SIGUSR1);
+		}
+		else
+			write(1, &g_data.current_char, 1);
+		g_data.bit_count = 0;
+		g_data.current_char = 0;
 	}
-	else if (++g_state.index >= g_state.buff_size)
-	{
-		new_size = g_state.buff_size + 1024;
-		new_buff = malloc(new_size);
-		if (!new_buff)
-			exit_error("Error: malloc failed\n");
-		ft_memcpy(new_buff, g_state.buffer, g_state.buff_size);
-		free(g_state.buffer);
-		g_state.buffer = new_buff;
-		g_state.buff_size = new_size;
-	}
-	else
-		g_state.buffer[g_state.index - 1] = g_state.current_char;
-	g_state.current_bit = 0;
-	g_state.current_char = 0;
+	kill(info->si_pid, SIGUSR1);
 }
 
-void	signal_handler(int sig, siginfo_t *info, void *ctx)
-{
-	(void)info;
-	(void)ctx;
-	if (sig == SIGUSR1)
-		g_state.current_char |= (1 << (7 - g_state.current_bit));
-	g_state.current_bit++;
-	if (g_state.current_bit == 8)
-		handle_char();
-}
-
-int	main(void)
+void	setup_signal(void)
 {
 	struct sigaction	sa;
 
-	init_state();
-	sa.sa_sigaction = signal_handler;
+	sa.sa_sigaction = sig_handler;
 	sa.sa_flags = SA_SIGINFO;
 	sigemptyset(&sa.sa_mask);
 	if (sigaction(SIGUSR1, &sa, NULL) == -1
 		|| sigaction(SIGUSR2, &sa, NULL) == -1)
-		exit_error("Error: sigaction failed\n");
+	{
+		write(2, "Signal error\n", 13);
+		exit(EXIT_FAILURE);
+	}
+}
+
+int	main(void)
+{
 	ft_printf("Server PID: %d\n", getpid());
+	setup_signal();
 	while (1)
 		pause();
 	return (0);
