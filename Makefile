@@ -1,61 +1,69 @@
-NAME_CLIENT		= client
-NAME_SERVER		= server
-NAME_CLIENT_BONUS	= client_bonus
-NAME_SERVER_BONUS	= server_bonus
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: yufli <yufli@student.42barcelona.com>      +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/03/16 15:19:46 by yufli             #+#    #+#              #
+#    Updated: 2025/03/16 20:32:36 by yufli            ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-CC			= cc
-CFLAGS			= -Wall -Wextra -Werror
-INCLUDES		= -I includes -I libft
+NAME_CLIENT = client
+NAME_CLIENT_BONUS = client_bonus
+NAME_SERVER = server
+NAME_SERVER_BONUS = server_bonus
 
-SRC_DIR			= src
-LIBFT_DIR		= libft
-OBJ_DIR			= obj
+SRCDIR = sources
+BONUSDIR = sources_bonus
+INCDIR = includes
+LIBFTDIR = libft
 
-LIBFT			= $(LIBFT_DIR)/libft.a
+CLIENT_SRCS = $(SRCDIR)/client.c
+CLIENT_SRCS_BONUS = $(BONUSDIR)/client_bonus.c
+SERVER_SRCS = $(SRCDIR)/server.c
+SERVER_SRCS_BONUS = $(BONUSDIR)/server_bonus.c
 
-CLIENT_SRC		= $(SRC_DIR)/client.c
-SERVER_SRC		= $(SRC_DIR)/server.c
-CLIENT_BONUS_SRC	= $(SRC_DIR)/client_bonus.c
-SERVER_BONUS_SRC	= $(SRC_DIR)/server_bonus.c
+CLIENT_OBJS = $(CLIENT_SRCS:.c=.o)
+CLIENT_OBJS_BONUS = $(CLIENT_SRCS_BONUS:.c=.o)
+SERVER_OBJS = $(SERVER_SRCS:.c=.o)
+SERVER_OBJS_BONUS = $(SERVER_SRCS_BONUS:.c=.o)
 
-CLIENT_OBJ		= $(CLIENT_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-SERVER_OBJ		= $(SERVER_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-CLIENT_BONUS_OBJ	= $(CLIENT_BONUS_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-SERVER_BONUS_OBJ	= $(SERVER_BONUS_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+CC = cc
+CFLAGS = -Wall -Wextra -Werror
+LIBFT = $(LIBFTDIR)/libft.a
 
 all: $(LIBFT) $(NAME_CLIENT) $(NAME_SERVER)
 
+$(LIBFT):
+	@make -C $(LIBFTDIR)
+
+$(NAME_CLIENT): $(CLIENT_OBJS) $(LIBFT)
+	$(CC) $(CFLAGS) -I $(INCDIR) $(CLIENT_OBJS) -L$(LIBFTDIR) -lft -o $(NAME_CLIENT)
+
+$(NAME_CLIENT_BONUS): $(CLIENT_OBJS_BONUS) $(LIBFT)
+	$(CC) $(CFLAGS) -I $(INCDIR) $(CLIENT_OBJS_BONUS) -L$(LIBFTDIR) -lft -o $(NAME_CLIENT_BONUS)
+
+$(NAME_SERVER): $(SERVER_OBJS) $(LIBFT)
+	$(CC) $(CFLAGS) -I $(INCDIR) $(SERVER_OBJS) -L$(LIBFTDIR) -lft -o $(NAME_SERVER)
+
+$(NAME_SERVER_BONUS): $(SERVER_OBJS_BONUS) $(LIBFT)
+	$(CC) $(CFLAGS) -I $(INCDIR) $(SERVER_OBJS_BONUS) -L$(LIBFTDIR) -lft -o $(NAME_SERVER_BONUS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -I $(INCDIR) -c $< -o $@
+
 bonus: $(LIBFT) $(NAME_CLIENT_BONUS) $(NAME_SERVER_BONUS)
 
-$(LIBFT):
-	@make -C $(LIBFT_DIR)
-
-$(OBJ_DIR):
-	@mkdir -p $(OBJ_DIR)
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-$(NAME_CLIENT): $(CLIENT_OBJ)
-	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -L$(LIBFT_DIR) -lft
-
-$(NAME_SERVER): $(SERVER_OBJ)
-	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -L$(LIBFT_DIR) -lft
-
-$(NAME_CLIENT_BONUS): $(CLIENT_BONUS_OBJ)
-	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -L$(LIBFT_DIR) -lft
-
-$(NAME_SERVER_BONUS): $(SERVER_BONUS_OBJ)
-	@$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -L$(LIBFT_DIR) -lft
-
 clean:
-	@make clean -C $(LIBFT_DIR)
-	@rm -rf $(OBJ_DIR)
+	rm -f $(CLIENT_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS_BONUS) $(SERVER_OBJS_BONUS)
+	make -C $(LIBFTDIR) clean
 
 fclean: clean
-	@make fclean -C $(LIBFT_DIR)
-	@rm -f $(NAME_CLIENT) $(NAME_SERVER) $(NAME_CLIENT_BONUS) $(NAME_SERVER_BONUS)
+	rm -f $(NAME_CLIENT) $(NAME_SERVER) $(NAME_CLIENT_BONUS) $(NAME_SERVER_BONUS)
+	make -C $(LIBFTDIR) fclean
 
 re: fclean all
 
-.PHONY: all bonus clean fclean re
+.PHONY: all clean fclean re bonus
