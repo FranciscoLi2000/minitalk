@@ -13,20 +13,21 @@
 #ifndef MINITALK_H
 # define MINITALK_H
 
-# include <signal.h>
-# include <unistd.h>
-# include <stdlib.h>
-# include "../libft/libft.h"
+# include <signal.h> /* 引入 signal 库，用于处理信号 */
+# include <unistd.h> /* 引入 unistd.h，提供系统调用函数 */
+# include <stdlib.h> /* 引入 stdlib.h，提供内存管理、转换和进程控制函数 */
+# include "../libft/libft.h" /* 引入 libft 头文件，提供额外的实用函数 */
 
 typedef struct s_server
 {
-	char	current_char;
-	int		bit_count;
-}	t_server;
-void	send_bit(int bit, pid_t server_pid);
-void	send_char(char c, pid_t server_pid);
-void	sig_handler(int sig, siginfo_t *info, void *context);
-void	setup_signal(void);
-void	sig_acknowledge(int sig);
+	char	current_char; /* 存储当前接收的字符 */
+	int	bit_count; /* 记录接收的比特位数 */
+} t_server;
+
+void	send_bit(int bit, pid_t server_pid); /* 发送单个位信号 */
+void	send_char(char c, pid_t server_pid); /* 发送整个字符 */
+void	sig_handler(int sig, siginfo_t *info, void *context); /* 处理接收到的信号 */
+void	setup_signal(void); /* 设置信号处理函数 */
+void	sig_acknowledge(int sig); /* 服务器确认收到信号 */
 
 #endif
